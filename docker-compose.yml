@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  dind:
+    image: docker:23.0.0-dind
+    container_name: dind
+    privileged: true
+    ports:
+      - "2375:2375"  # Expose Docker daemon port
+    volumes:
+      - dind-data:/var/lib/docker  # Persist Docker data
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home  # Persist Jenkins data
+    environment:
+      - DOCKER_HOST=tcp://dind:2375  # Set Docker host to DinD container
+    depends_on:
+      - dind
+
+volumes:
+  dind-data:
+  jenkins-data:
+
