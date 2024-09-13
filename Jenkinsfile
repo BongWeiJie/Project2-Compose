@@ -29,6 +29,7 @@ pipeline {
             }
             post {
                 always {
+                    // Optionally, monitor Snyk results
                     sh 'snyk monitor'
                 }
                 failure {
@@ -40,6 +41,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    // Optionally, add additional build steps here
                     echo 'Building the project...'
                 }
             }
@@ -47,6 +49,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
+                    // Optionally, add test commands here
                     echo 'Running tests...'
                 }
             }
@@ -54,6 +57,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // Optionally, add deploy steps here
                     echo 'Deploying the project...'
                 }
             }
@@ -62,6 +66,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
+            // Cleanup steps, e.g., removing temporary files
         }
         success {
             echo 'Pipeline succeeded!'
