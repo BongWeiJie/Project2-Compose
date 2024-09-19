@@ -19,8 +19,8 @@ pipeline {
         stage('Snyk Security Scan') {
             steps {
                 script {
-                    sh 'npm install -g snyk'
-                    sh 'snyk test --all-projects'
+                    sh 'npm install snyk' // Install Snyk locally
+                    sh './node_modules/.bin/snyk test --all-projects' // Use local installation
                 }
             }
             post {
