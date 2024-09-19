@@ -6,6 +6,7 @@ pipeline {
     }
     environment {
         SNYK_TOKEN = credentials('snyk-api-token')
+        NPM_CONFIG_CACHE = '/tmp/.npm' // Set custom npm cache directory
     }
     stages {
         stage('Install Dependencies') {
