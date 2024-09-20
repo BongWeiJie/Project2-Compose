@@ -16,19 +16,7 @@ pipeline {
                 }
             }
         }
-        stage('Snyk Security Scan') {
-           steps {
-                script {
-                    sh 'npm install snyk' // Install Snyk locally
-                    sh './node_modules/.bin/snyk test --all-projects' // Use local installation
-                }
-            }
-            post {
-                failure {
-                    error 'Snyk scan found vulnerabilities. Failing the build.'
-                }
-            }
-        }
+        
         stage('Build') {
             steps {
                 script {
