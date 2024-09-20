@@ -40,9 +40,6 @@ pipeline {
         }
     }
     post {
-        always {
-            echo 'Cleaning up...'
-        }
         success {
             echo 'Pipeline succeeded!'
         }
