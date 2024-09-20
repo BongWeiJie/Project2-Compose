@@ -7,6 +7,12 @@ pipeline {
     environment {
         SNYK_TOKEN = credentials('snyk-api-token')
         NPM_CONFIG_CACHE = '/tmp/.npm' // Set custom npm cache directory
+        AWS_DEFAULT_REGION = 'your-aws-region' // e.g., 'us-west-2'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add your AWS access key in Jenkins credentials
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add your AWS secret key in Jenkins credentials
+        APPLICATION_NAME = 'aws-elastic-beanstalk-express-js-sample'
+        ENVIRONMENT_NAME = 'your-environment-name'
+        S3_BUCKET = 'your-s3-bucket-for-uploads'
     }
     stages {
         stage('Install Dependencies') {
@@ -37,7 +43,9 @@ pipeline {
             steps {
                 script {
                     echo 'Building the project...'
-                    // Add build commands here if applicable
+                    // Assuming there's a build step defined in package.json, e.g., "build": "webpack"
+                    // Uncomment the line below if you have a build command
+                    // sh 'npm run build'
                 }
             }
         }
@@ -50,11 +58,34 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Package Application') {
             steps {
                 script {
-                    echo 'Deploying the project...'
-                    // Add deployment commands here if applicable
+                    sh 'zip -r app.zip .'
+                }
+            }
+        }
+        stage('Upload to S3') {
+            steps {
+                script {
+                    sh "aws s3 cp app.zip s3://$S3_BUCKET/app.zip"
+                }
+            }
+        }
+        stage('Deploy to Elastic Beanstalk') {
+            steps {
+                script {
+                    def versionLabel = "${env.BUILD_ID}-${new Date().format('yyyyMMddHHmmss')}"
+                    sh """
+                        aws elasticbeanstalk create-application-version \
+                            --application-name $APPLICATION_NAME \
+                            --version-label $versionLabel \
+                            --source-bundle S3Bucket=$S3_BUCKET,S3Key=app.zip
+
+                        aws elasticbeanstalk update-environment \
+                            --environment-name $ENVIRONMENT_NAME \
+                            --version-label $versionLabel
+                    """
                 }
             }
         }
