@@ -12,22 +12,41 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    sh 'npm install --save'
+                    def installOutput = sh(script: 'npm install --save', returnStdout: true)
+                    echo installOutput
+                    writeFile file: 'install-dependencies.log', text: installOutput
                 }
             }
         }
-        
+        stage('Snyk Security Scan') {
+            steps {
+                script {
+                    sh 'npm install snyk' // Install Snyk locally
+                    def snykOutput = sh(script: './node_modules/.bin/snyk test --all-projects', returnStdout: true)
+                    echo snykOutput
+                    writeFile file: 'snyk-report.log', text: snykOutput
+                }
+            }
+            post {
+                failure {
+                    error 'Snyk scan found vulnerabilities. Failing the build.'
+                }
+            }
+        }
         stage('Build') {
             steps {
                 script {
                     echo 'Building the project...'
+                    // Add build commands here if applicable
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    echo 'Running tests...'
+                    def testOutput = sh(script: 'npm test', returnStdout: true)
+                    echo testOutput
+                    writeFile file: 'test-report.log', text: testOutput
                 }
             }
         }
@@ -35,11 +54,16 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying the project...'
+                    // Add deployment commands here if applicable
                 }
             }
         }
     }
     post {
+        always {
+            echo 'Cleaning up...'
+            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+        }
         success {
             echo 'Pipeline succeeded!'
         }
