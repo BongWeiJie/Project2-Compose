@@ -7,12 +7,6 @@ pipeline {
     environment {
         SNYK_TOKEN = credentials('snyk-api-token')
         NPM_CONFIG_CACHE = '/tmp/.npm'
-        AWS_DEFAULT_REGION = 'your-aws-region'
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        APPLICATION_NAME = 'aws-elastic-beanstalk-express-js-sample'
-        ENVIRONMENT_NAME = 'your-environment-name'
-        S3_BUCKET = 'your-s3-bucket-for-uploads'
     }
     stages {
         stage('Install Dependencies') {
@@ -74,32 +68,6 @@ pipeline {
                 }
             }
         }
-        stage('Upload to S3') {
-            steps {
-                script {
-                    echo 'Uploading to S3...'
-                    sh "aws s3 cp app.zip s3://$S3_BUCKET/app.zip"
-                }
-            }
-        }
-        stage('Deploy to Elastic Beanstalk') {
-            steps {
-                script {
-                    echo 'Deploying to Elastic Beanstalk...'
-                    def versionLabel = "${env.BUILD_ID}-${new Date().format('yyyyMMddHHmmss')}"
-                    sh """
-                        aws elasticbeanstalk create-application-version \
-                            --application-name $APPLICATION_NAME \
-                            --version-label $versionLabel \
-                            --source-bundle S3Bucket=$S3_BUCKET,S3Key=app.zip
-
-                        aws elasticbeanstalk update-environment \
-                            --environment-name $ENVIRONMENT_NAME \
-                            --version-label $versionLabel
-                    """
-                }
-            }
-        }
     }
     post {
         always {
@@ -108,9 +76,6 @@ pipeline {
         }
         success {
             echo 'Pipeline succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed!'
         }
     }
 }
