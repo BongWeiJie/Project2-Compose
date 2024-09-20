@@ -92,8 +92,10 @@ pipeline {
     }
     post {
         always {
-            echo 'Cleaning up...'
-            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            node {
+                echo 'Cleaning up...'
+                archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            }
         }
         success {
             echo 'Pipeline succeeded!'
