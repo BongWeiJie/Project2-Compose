@@ -18,6 +18,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
+                    echo 'Installing dependencies...'
                     def installOutput = sh(script: 'npm install --save', returnStdout: true)
                     echo installOutput
                     writeFile file: 'install-dependencies.log', text: installOutput
@@ -27,10 +28,16 @@ pipeline {
         stage('Snyk Security Scan') {
             steps {
                 script {
+                    echo 'Running Snyk security scan...'
                     sh 'npm install snyk' // Install Snyk locally
                     def snykOutput = sh(script: './node_modules/.bin/snyk test --all-projects || true', returnStdout: true)
                     echo snykOutput
                     writeFile file: 'snyk-report.log', text: snykOutput
+                    
+                    // Check for critical vulnerabilities
+                    if (snykOutput.contains('Critical')) {
+                        error("Critical vulnerabilities detected during the Snyk scan.")
+                    }
                 }
             }
             post {
@@ -43,8 +50,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building the project...'
-                    // Assuming there's a build step defined in package.json, e.g., "build": "webpack"
-                    // Uncomment the line below if you have a build command
+                    // Uncomment if you have a build command
                     // sh 'npm run build'
                 }
             }
@@ -52,15 +58,22 @@ pipeline {
         stage('Test') {
             steps {
                 script {
+                    echo 'Running tests...'
                     def testOutput = sh(script: 'npm test', returnStdout: true)
                     echo testOutput
                     writeFile file: 'test-report.log', text: testOutput
+                    
+                    // Check for test failures
+                    if (testOutput.contains('failed')) {
+                        error("Tests failed during execution.")
+                    }
                 }
             }
         }
         stage('Package Application') {
             steps {
                 script {
+                    echo 'Packaging the application...'
                     sh 'zip -r app.zip .'
                 }
             }
@@ -68,6 +81,7 @@ pipeline {
         stage('Upload to S3') {
             steps {
                 script {
+                    echo 'Uploading to S3...'
                     sh "aws s3 cp app.zip s3://$S3_BUCKET/app.zip"
                 }
             }
@@ -75,6 +89,7 @@ pipeline {
         stage('Deploy to Elastic Beanstalk') {
             steps {
                 script {
+                    echo 'Deploying to Elastic Beanstalk...'
                     def versionLabel = "${env.BUILD_ID}-${new Date().format('yyyyMMddHHmmss')}"
                     sh """
                         aws elasticbeanstalk create-application-version \
@@ -95,6 +110,7 @@ pipeline {
             node {
                 echo 'Cleaning up...'
                 archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+                // Optionally, add other cleanup steps here
             }
         }
         success {
