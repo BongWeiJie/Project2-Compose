@@ -103,8 +103,10 @@ pipeline {
     }
     post {
         always {
-            echo 'Cleaning up...'
-            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            node { // Wrap this in a node block
+                echo 'Cleaning up...'
+                archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            }
         }
         success {
             echo 'Pipeline succeeded!'
