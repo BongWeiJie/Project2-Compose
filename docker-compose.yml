@@ -11,10 +11,12 @@ services:
       - dind-data:/var/lib/docker  # Persist Docker data
 
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: Dockerfile  # Specify the Dockerfile
     container_name: jenkins
     ports:
-      - "8080:8080"
+      - "8079:8079"
       - "50000:50000"
     volumes:
       - jenkins-data:/var/jenkins_home  # Persist Jenkins data
@@ -26,4 +28,3 @@ services:
 volumes:
   dind-data:
   jenkins-data:
-
