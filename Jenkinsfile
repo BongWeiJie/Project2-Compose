@@ -60,15 +60,7 @@ pipeline {
                 }
             }
         }
-        stage('Package Application') {
-            steps {
-                script {
-                    echo 'Packaging the application...'
-                    sh 'zip -r app.zip .'
-                }
-            }
-        }
-    }
+        
     post {
         always {
             echo 'Cleaning up...'
