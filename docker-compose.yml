@@ -2,29 +2,29 @@ version: '3.8'
 
 services:
   dind:
-    image: docker:23.0.0-dind
-    container_name: dind
-    privileged: true
+    image: docker:23.0.0-dind # Use the Docker-in-Docker image to allow Docker commands inside this container
+    container_name: dind # Name of the container for easier reference
+    privileged: true # Required to run Docker daemon inside the container
     ports:
-      - "2375:2375"  # Expose Docker daemon port
+      - "2375:2375"  # Expose the Docker daemon port to allow external access from Jenkins
     volumes:
-      - dind-data:/var/lib/docker  # Persist Docker data
+      - dind-data:/var/lib/docker  # Persist Docker data to prevent loss on container restart
 
   jenkins:
     build:
-      context: .
-      dockerfile: Dockerfile  # Specify the Dockerfile
-    container_name: jenkins
+      context: .  # Build the Jenkins image using the current directory as the context
+      dockerfile: Dockerfile  # Specify the Dockerfile to use for building the Jenkins image
+    container_name: jenkins # Name of the Jenkins container for easier reference
     ports:
-      - "8079:8079"
-      - "50000:50000"
+      - "8079:8079" # Expose port 8079 for the Jenkins web interface
+      - "50000:50000" # Expose port 50000 for Jenkins agent communication
     volumes:
-      - jenkins-data:/var/jenkins_home  # Persist Jenkins data
+      - jenkins-data:/var/jenkins_home  # Persist Jenkins data to retain job configurations and build history
     environment:
-      - DOCKER_HOST=tcp://dind:2375  # Set Docker host to DinD container
+      - DOCKER_HOST=tcp://dind:2375  # Set the Docker host to point to the DinD container, enabling Docker commands
     depends_on:
-      - dind
+      - dind # Ensure that the dind service is started before Jenkins
 
 volumes:
-  dind-data:
-  jenkins-data:
+  dind-data: # Volume for persisting Docker data
+  jenkins-data: # Volume for persisting Jenkins data
