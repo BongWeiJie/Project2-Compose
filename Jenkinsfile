@@ -6,10 +6,10 @@ pipeline {
     }
     environment {
         SNYK_TOKEN = credentials('snyk-api-token')
-        NPM_CONFIG_CACHE = '/tmp/.npm' // Set custom npm cache directory
-        AWS_DEFAULT_REGION = 'your-aws-region' // e.g., 'us-west-2'
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // Add your AWS access key in Jenkins credentials
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // Add your AWS secret key in Jenkins credentials
+        NPM_CONFIG_CACHE = '/tmp/.npm'
+        AWS_DEFAULT_REGION = 'your-aws-region'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
         APPLICATION_NAME = 'aws-elastic-beanstalk-express-js-sample'
         ENVIRONMENT_NAME = 'your-environment-name'
         S3_BUCKET = 'your-s3-bucket-for-uploads'
@@ -29,12 +29,11 @@ pipeline {
             steps {
                 script {
                     echo 'Running Snyk security scan...'
-                    sh 'npm install snyk' // Install Snyk locally
+                    sh 'npm install snyk'
                     def snykOutput = sh(script: './node_modules/.bin/snyk test --all-projects || true', returnStdout: true)
                     echo snykOutput
                     writeFile file: 'snyk-report.log', text: snykOutput
                     
-                    // Check for critical vulnerabilities
                     if (snykOutput.contains('Critical')) {
                         error("Critical vulnerabilities detected during the Snyk scan.")
                     }
@@ -50,8 +49,6 @@ pipeline {
             steps {
                 script {
                     echo 'Building the project...'
-                    // Uncomment if you have a build command
-                    // sh 'npm run build'
                 }
             }
         }
@@ -63,7 +60,6 @@ pipeline {
                     echo testOutput
                     writeFile file: 'test-report.log', text: testOutput
                     
-                    // Check for test failures
                     if (testOutput.contains('failed')) {
                         error("Tests failed during execution.")
                     }
@@ -107,11 +103,8 @@ pipeline {
     }
     post {
         always {
-            node {
-                echo 'Cleaning up...'
-                archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
-                // Optionally, add other cleanup steps here
-            }
+            echo 'Cleaning up...'
+            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
         }
         success {
             echo 'Pipeline succeeded!'
